@@ -1,0 +1,70 @@
+# Build & output
+bin/
+obj/
+out/
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# NuGet
+*.nupkg
+# NuGet Packages folder
+packages/
+
+# Resharper
+_ReSharper*/
+*.DotSettings.user
+
+# Visual Studio Code
+.vscode/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]uild/
+[Bb]in/
+[Oo]bj/
+TestResults/
+
+# Publish output
+publish/
+
+# Logs
+*.log
+logs/
+
+# Entity Framework Core Migrations
+**/Migrations/
+**/migrations/
+
+# Secret files
+secrets.json
+appsettings.*.json
+
+# OS generated
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.bak
+*.backup
