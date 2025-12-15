@@ -3,7 +3,7 @@ using Marvel.Application.Queries.Marvel;
 
 namespace Marvel.Application.Validators.Marvel
 {
-    public class GetComicsQueryValidator : AbstractValidator<GetComicsQuery>
+    public class GetComicsQueryValidator : AbstractValidator<GetPokemonsQuery>
     {
         public GetComicsQueryValidator()
         {

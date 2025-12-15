@@ -1,0 +1,12 @@
+### Obtener lista de Pokémon
+GET https://pokeapi.co/api/v2/pokemon?offset=0&limit=20
+Accept: application/json
+
+### Detalle de Pokémon por nombre
+GET https://pokeapi.co/api/v2/pokemon/pikachu
+Accept: application/json
+
+### Detalle de Pokémon por nombre
+GET https://pokeapi.co/api/v2/pokemon/25
+Accept: application/json
+

@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 namespace Marvel.Application.Validators.Marvel
 {
-    public class GetComicDetailQueryValidator : AbstractValidator<GetComicDetailQuery>
+    public class GetComicDetailQueryValidator : AbstractValidator<GetPokemonDetailQuery>
     {
         public GetComicDetailQueryValidator()
         {
-            RuleFor(x => x.Id)
+            RuleFor(x => x.IdOrName)
                 .NotEmpty()
-                .WithMessage("El ID del cómic no puede estar vacío.");
+                .WithMessage("El ID del Poken o Nombre no puede estar vacío.");
         }
     }
 }

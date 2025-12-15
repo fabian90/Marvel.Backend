@@ -1,115 +1,185 @@
-# Marvel.Backend API
+Pokémon Backend API – .NET 8
+ Descripción
 
-## Descripción
+Pokémon Backend API es una API REST desarrollada en .NET 8, diseñada bajo los principios de Clean Architecture, Domain-Driven Design (DDD ligero) y CQRS con MediatR.
 
-Marvel.Backend es una **API REST** desarrollada en **.NET 8**, siguiendo los principios de **Domain-Driven Design (DDD)** y **Clean Architecture**.  
+La aplicación permite la autenticación de usuarios mediante JWT, el consumo de datos reales desde PokeAPI v2 y la gestión de una lista personalizada de Pokémon favoritos, protegida por autorización.
 
-El sistema permite a los usuarios registrarse, autenticarse mediante **JWT** y gestionar su lista personalizada de cómics favoritos, integrándose con un **Marvel Mock Service** para obtener información de cómics simulada.
+Este proyecto fue desarrollado como prueba técnica, priorizando buenas prácticas, mantenibilidad y arquitectura escalable.
 
----
+ Arquitectura
 
-## Arquitectura
+La solución implementa Clean Architecture, separando responsabilidades en capas independientes y desacopladas.
 
-La solución está organizada siguiendo **Clean Architecture + DDD**, separando responsabilidades en capas bien definidas:
+Capas del sistema
+🔹 Domain (Marvel.Domain)
 
-### Capas y proyectos
+Entidades del dominio (User, PokemonFavorite)
 
-1. **Marvel.Domain**  
-   - Contiene las **entidades de dominio** y lógica de negocio.  
-   - Ejemplo de entidades: `User`, `ComicFavorite`.  
-   - Aquí viven las reglas de negocio, invariantes y validaciones propias del dominio.
+Reglas de negocio
 
-2. **Marvel.Application**  
-   - Contiene **DTOs, servicios de aplicación, interfaces, commands y queries (CQRS)**.  
-   - Los servicios coordinan la lógica de negocio usando las entidades del dominio y repositorios.  
-   - Aquí también se implementa la validación de requests mediante **FluentValidation**.
+Sin dependencias externas
 
-3. **Marvel.Infrastructure**  
-   - Contiene la **implementación de repositorios**, **persistencia con EF Core** y acceso a servicios externos (como Marvel Mock Service).  
-   - Configuración de `ApplicationDbContext` con `DbSet<User>` y `DbSet<ComicFavorite>`.
+🔹 Application (Marvel.Application)
 
-4. **Marvel.Api**  
-   - Contiene los **controllers**, middleware, configuración de Swagger y JWT.  
-   - Expone los endpoints REST para autenticación y gestión de favoritos.  
-   - Protege los endpoints mediante `[Authorize]` y obtiene `UserId` desde el token JWT.
+DTOs (Request / Response)
 
----
+Servicios de aplicación
 
-## Estructura de carpetas
+Interfaces
 
+CQRS (Queries y Handlers)
+
+Validaciones con FluentValidation
+
+🔹 Infrastructure (Marvel.Infrastructure)
+
+Persistencia con Entity Framework Core
+
+Repositorios
+
+Implementación de JWT
+
+Consumo de PokeAPI v2 mediante HttpClient
+
+🔹 API (Marvel.Api)
+
+Controllers REST
+
+Configuración de Swagger
+
+Autenticación y autorización JWT
+
+📁 Estructura del Proyecto
 Marvel.Backend.sln
 │
 ├─ Marvel.Domain
 │ └─ Entities
-│ ├─ User.cs
-│ └─ ComicFavorite.cs
+│   ├─ User.cs
+│   └─ PokemonFavorite.cs
 │
 ├─ Marvel.Application
 │ ├─ DTOs
-│ │ ├─ Auth
-│ │ │ ├─ RegisterRequestDto.cs
-│ │ │ ├─ LoginRequestDto.cs
-│ │ │ └─ AuthResponseDto.cs
-│ │ └─ Favorites
-│ │ ├─ AddFavoriteRequest.cs
-│ │ └─ FavoriteResponse.cs
 │ ├─ Interfaces
-│ │ ├─ IAuthenticationService.cs
-│ │ ├─ IFavoriteService.cs
-│ │ └─ IJwtProvider.cs
 │ ├─ Services
-│ │ ├─ AuthenticationService.cs
-│ │ └─ FavoriteService.cs
 │ ├─ Validators
-│ │ └─ AddFavoriteRequestValidator.cs
-│ └─ Queries / Commands (CQRS)
+│ └─ Queries (CQRS)
 │
 ├─ Marvel.Infrastructure
 │ ├─ Persistence
-│ │ └─ ApplicationDbContext.cs
 │ ├─ Repositories
-│ │ ├─ UserRepository.cs
-│ │ └─ ComicFavoriteRepository.cs
 │ └─ Services
-│ └─ MarvelMockService.cs
+│   └─ PokeApiService.cs
 │
 └─ Marvel.Api
-├─ Controllers
-│ ├─ AuthController.cs
-│ └─ FavoritesController.cs
-├─ Program.cs
-└─ appsettings.json
----
+  ├─ Controllers
+  ├─ Program.cs
+  └─ appsettings.json
 
-## Versiones y librerías
+🔐 Seguridad
 
-- **.NET 8**
-- **Entity Framework Core** → Persistencia y migraciones
-- **FluentValidation** → Validación de DTOs
-- **Swashbuckle (Swagger)** → Documentación de API
-- **Microsoft.AspNetCore.Authentication.JwtBearer** → JWT y seguridad
-- **InMemoryDatabase / SQL Server** → Opcional para desarrollo y producción
-- **MediatR** → CQRS (comandos y consultas)
+Autenticación basada en JWT Bearer
 
----
+Tokens firmados con HMAC SHA256
 
-## Endpoints principales
+Endpoints protegidos con [Authorize]
 
-| Método | Ruta | Descripción | Autenticación |
-|--------|------|------------|---------------|
-| POST   | /api/auth/register | Registrar usuario | No |
-| POST   | /api/auth/login    | Login y obtener JWT | No |
-| POST   | /api/favorites     | Agregar cómic favorito | Sí |
-| DELETE | /api/favorites/{comicId} | Eliminar favorito | Sí |
-| GET    | /api/favorites     | Listar favoritos | Sí |
+Swagger configurado para autenticación JWT
 
----
+🌐 Integración con PokeAPI v2
 
-## Ejecución
+Se consumen los siguientes endpoints reales:
 
-1. Clonar repositorio.
-2. Configurar `appsettings.json` con la cadena de conexión a SQL Server o usar InMemoryDatabase.
-3. Restaurar paquetes NuGet:
+GET /pokemon?offset&limit
 
-```bash
+GET /pokemon/{id | name}
+
+Los datos externos se mapean a DTOs propios, evitando exponer modelos externos.
+
+📌 Endpoints Principales
+Método	Endpoint	Descripción	Autenticación
+POST	/api/auth/register	Registro de usuario	No
+POST	/api/auth/login	Login y obtención de JWT	No
+GET	/api/pokemon	Listado de Pokémon	Sí
+GET	/api/pokemon/{id}	Detalle de Pokémon	Sí
+POST	/api/favorites	Agregar Pokémon favorito	Sí
+DELETE	/api/favorites/{pokemonId}	Eliminar favorito	Sí
+GET	/api/favorites	Listar favoritos	Sí
+⚙️ Instalación y Ejecución
+Requisitos
+
+.NET SDK 8.0
+
+Visual Studio 2022 o superior
+
+Git
+
+Conexión a Internet (PokeAPI)
+
+Pasos
+
+Clonar el repositorio
+
+git clone <https://github.com/fabian90/Marvel.Backend.git>
+
+
+Restaurar dependencias
+
 dotnet restore
+
+
+Configurar appsettings.json
+
+"Jwt": {
+  "Secret": "CLAVE_SUPER_SECRETA",
+  "Issuer": "PokemonApi",
+  "Audience": "PokemonApiUsers"
+}
+
+
+Ejecutar la aplicación
+
+dotnet run --project Marvel.Api
+
+
+Acceder a Swagger
+
+https://localhost:{puerto}/swagger
+
+🧪 Base de Datos
+
+Base de datos InMemory para desarrollo y pruebas
+
+Arquitectura preparada para SQL Server u otro motor relacional
+
+🧠 Tecnologías Utilizadas
+
+.NET 8
+
+Entity Framework Core
+
+MediatR (CQRS)
+
+FluentValidation
+
+JWT Bearer Authentication
+
+Swagger / OpenAPI
+
+HttpClient
+
+PokeAPI v2
+
+🎯 Objetivo
+
+Este proyecto demuestra:
+
+Dominio de .NET moderno
+
+Aplicación correcta de Clean Architecture
+
+Implementación segura de JWT
+
+Integración con APIs externas reales
+
+Código limpio, escalable y profesional

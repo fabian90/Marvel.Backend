@@ -12,8 +12,8 @@ namespace Marvel.Application.Validators.Marvel
     {
         public AddFavoriteRequestValidator()
         {
-            RuleFor(x => x.ComicId)
-                .NotEmpty().WithMessage("ComicId no puede estar vacío.");
+            RuleFor(x => x.PokemonId)
+                .NotEmpty().WithMessage("PokemonId no puede estar vacío.");
         }
     }
 }

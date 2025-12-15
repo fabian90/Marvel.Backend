@@ -11,6 +11,6 @@ namespace Marvel.Application.DTOs.Marvel
     /// </summary>
     public record AddFavoriteRequest
     {
-        public string ComicId { get; init; } = string.Empty;
+        public string PokemonId { get; init; } = string.Empty;
     }
 }

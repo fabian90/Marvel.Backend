@@ -37,7 +37,7 @@ namespace Marvel.Api.Controllers
         [ProducesResponseType(typeof(ProblemDetails), 400)]
         public async Task<IActionResult> AddFavorite([FromBody] AddFavoriteRequest request)
         {
-            var result = await _favoriteService.AddFavoriteAsync(GetUserId(), request.ComicId);
+            var result = await _favoriteService.AddFavoriteAsync(GetUserId(), request.PokemonId);
             return Ok(result);
         }
 

@@ -9,6 +9,6 @@ namespace Marvel.Domain.Entities
         public string PasswordHash { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
 
-        public ICollection<ComicFavorite> Favorites { get; private set; } = new List<ComicFavorite>();
+        public ICollection<PokemonFavorite> Favorites { get; private set; } = new List<PokemonFavorite>();
     }
 }

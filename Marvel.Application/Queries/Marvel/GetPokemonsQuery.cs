@@ -3,5 +3,6 @@ using MediatR;
 
 namespace Marvel.Application.Queries.Marvel
 {
-    public record GetComicDetailQuery(string Id) : IRequest<MarvelApiResponse<ComicDto>>;
+    public record GetPokemonsQuery(int Offset, int Limit)
+    : IRequest<PokemonListResponseDto>;
 }

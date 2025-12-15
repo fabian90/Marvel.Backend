@@ -5,33 +5,47 @@ namespace Marvel.Infrastructure.Persistence
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options) { }
 
-        public DbSet<User> Users { get; set; }
-        public DbSet<ComicFavorite> ComicFavorites { get; set; }
+        public DbSet<User> Users => Set<User>();
+        public DbSet<PokemonFavorite> PokemonFavorites => Set<PokemonFavorite>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configuración User
+            // =======================
+            // User
+            // =======================
             modelBuilder.Entity<User>(builder =>
             {
                 builder.HasKey(u => u.Id);
-                builder.HasIndex(u => u.Email).IsUnique();
+
+                builder.Property(u => u.Email)
+                       .IsRequired()
+                       .HasMaxLength(150);
+
+                builder.HasIndex(u => u.Email)
+                       .IsUnique();
+
                 builder.HasMany(u => u.Favorites)
                        .WithOne()
                        .HasForeignKey(f => f.UserId)
                        .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Configuración ComicFavorite
-            modelBuilder.Entity<ComicFavorite>(builder =>
+            // =======================
+            // PokemonFavorite
+            // =======================
+            modelBuilder.Entity<PokemonFavorite>(builder =>
             {
-                builder.HasKey(f => f.Id);
-                builder.Property(f => f.UserId).IsRequired();
-                builder.Property(f => f.ComicId).IsRequired();
-                builder.HasIndex(f => new { f.UserId, f.ComicId }).IsUnique();
+                // Clave compuesta (UserId + PokemonId)
+                builder.HasKey(f => new { f.UserId, f.PokemonId });
+
+                builder.Property(f => f.UserId)
+                       .IsRequired()
+                       .HasMaxLength(50);
             });
         }
     }

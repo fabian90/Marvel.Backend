@@ -1,50 +1,64 @@
 using Marvel.Application.Interfaces;
 using Marvel.Application.Services;
+using Marvel.Application.Validators.Auth;
+using Marvel.Application.Validators.Marvel;
 using Marvel.Domain.Interfaces;
+using Marvel.Domain.Repositories;
 using Marvel.Infrastructure.Authentication;
 using Marvel.Infrastructure.Persistence;
-using Marvel.Infrastructure.Persistence.Repositories;
-using MediatR;
+using Marvel.Infrastructure.Repositories;
 using Marvel.Infrastructure.Services;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.OpenApi.Models;
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Marvel.Application.Validators.Auth;
-using Marvel.Application.Validators.Marvel;
-using Marvel.Domain.Repositories;
-using Marvel.Infrastructure.Repositories;
+using System.Text;
+using Marvel.Application.Queries.Marvel;
+using Marvel.Infrastructure.Persistence.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+#region Controllers y Validaciones
 
-// Add services to the container.
+// Registro de controladores
 builder.Services.AddControllers();
 
+// FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 
-builder.Services.AddValidatorsFromAssemblyContaining<
-    Marvel.Application.Validators.Auth.RegisterRequestDtoValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<
-    Marvel.Application.Validators.Marvel.GetComicsQueryValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<
-    AddFavoriteRequestValidator>();
+// Registro automático de validadores
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<GetComicsQueryValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<AddFavoriteRequestValidator>();
 
+#endregion
 
+#region Swagger (Documentación API)
+
+// Explorador de endpoints
 builder.Services.AddEndpointsApiExplorer();
+
+// Configuración Swagger + JWT
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Marvel Backend API", Version = "v1", Description = "API for Marvel Backend application, including authentication and a simulated Marvel comics module." });
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Marvel Backend API",
+        Version = "v1",
+        Description = "API Backend con autenticación JWT y consumo de PokeAPI v2."
+    });
 
-    // Configure JWT Bearer security
+    // Configuración de seguridad JWT Bearer
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme.\n\nEnter 'Bearer' [space] and then your token in the text input below.\n\nExample: 'Bearer 12345abcdef'",
+        Description =
+            "Autorización JWT usando el esquema Bearer.\n\n" +
+            "Ingrese el token con el prefijo 'Bearer '.\n\n" +
+            "Ejemplo: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
@@ -62,40 +76,64 @@ builder.Services.AddSwaggerGen(c =>
                     Id = "Bearer"
                 }
             },
-            new string[] {}}
+            Array.Empty<string>()
+        }
     });
 
-    // Set the comments path for the Swagger JSON and UI.
+    // Habilitar comentarios XML
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);
 });
 
-// Infrastructure - Database
+#endregion
+
+#region Base de Datos (Infraestructura)
+
+// Base de datos en memoria (prueba técnica)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseInMemoryDatabase("MarvelDb"));
 
-// Infrastructure - Auth
+#endregion
+
+#region Infraestructura - Seguridad y Persistencia
+
+// Autenticación y seguridad
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtProvider, JwtProvider>();
 
-// Infrastructure - Favorites
-builder.Services.AddScoped<IComicFavoriteRepository, ComicFavoriteRepository>();
+// Repositorio de favoritos Pokémon
+builder.Services.AddScoped<IPokemonFavoriteRepository, PokemonFavoriteRepository>();
 
-// Application - Services
+#endregion
+
+#region Capa Application - Servicios
+
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IFavoriteService, FavoriteService>();
 
-// Application - Marvel Mock Service
-builder.Services.AddScoped<IMarvelMockService, MarvelMockService>();
+#endregion
 
-// MediatR
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(IMarvelMockService).Assembly));
+#region MediatR (CQRS)
 
-// JWT Configuration
+// Registro de handlers CQRS
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssemblyContaining<GetPokemonsQuery>());
+
+#endregion
+
+#region HttpClient - PokeAPI
+
+// Cliente HTTP para consumo de PokeAPI v2
+builder.Services.AddHttpClient<IPokeApiService, PokeApiService>();
+
+#endregion
+
+#region JWT Configuration
+
 var secretKey = builder.Configuration["Jwt:Secret"];
-var key = Encoding.UTF8.GetBytes(secretKey!); 
+var key = Encoding.UTF8.GetBytes(secretKey!);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -112,9 +150,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+#endregion
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+#region Pipeline HTTP
+
+// Swagger solo en entorno desarrollo
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -123,9 +165,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Middleware de autenticación y autorización
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Mapear controladores
 app.MapControllers();
+
+#endregion
 
 app.Run();
