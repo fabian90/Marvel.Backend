@@ -1,4 +1,4 @@
-using Marvel.Application.Interfaces;
+锘縰sing Marvel.Application.Interfaces;
 using Marvel.Application.Services;
 using Marvel.Application.Validators.Auth;
 using Marvel.Application.Validators.Marvel;
@@ -26,37 +26,58 @@ var builder = WebApplication.CreateBuilder(args);
 // Registro de controladores
 builder.Services.AddControllers();
 
+#region Cache
+builder.Services.AddMemoryCache();
+#endregion
+
 // FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 
-// Registro autom醫ico de validadores
+// Registro autom谩tico de validadores
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<GetComicsQueryValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<AddFavoriteRequestValidator>();
 
 #endregion
 
-#region Swagger (Documentaci髇 API)
+#region CORS
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular",
+        policy =>
+        {
+            policy
+                .WithOrigins("http://localhost:3000")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                 .SetPreflightMaxAge(TimeSpan.FromMinutes(30));
+        });
+});
+
+#endregion
+
+#region Swagger (Documentaci贸n API)
 
 // Explorador de endpoints
 builder.Services.AddEndpointsApiExplorer();
 
-// Configuraci髇 Swagger + JWT
+// Configuraci贸n Swagger + JWT
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Marvel Backend API",
         Version = "v1",
-        Description = "API Backend con autenticaci髇 JWT y consumo de PokeAPI v2."
+        Description = "API Backend con autenticaci贸n JWT y consumo de PokeAPI v2."
     });
 
-    // Configuraci髇 de seguridad JWT Bearer
+    // Configuraci贸n de seguridad JWT Bearer
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description =
-            "Autorizaci髇 JWT usando el esquema Bearer.\n\n" +
+            "Autorizaci贸n JWT usando el esquema Bearer.\n\n" +
             "Ingrese el token con el prefijo 'Bearer '.\n\n" +
             "Ejemplo: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'",
         Name = "Authorization",
@@ -90,7 +111,7 @@ builder.Services.AddSwaggerGen(c =>
 
 #region Base de Datos (Infraestructura)
 
-// Base de datos en memoria (prueba t閏nica)
+// Base de datos en memoria (prueba t茅cnica)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseInMemoryDatabase("MarvelDb"));
 
@@ -98,12 +119,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 #region Infraestructura - Seguridad y Persistencia
 
-// Autenticaci髇 y seguridad
+// Autenticaci贸n y seguridad
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtProvider, JwtProvider>();
 
-// Repositorio de favoritos Pok閙on
+// Repositorio de favoritos Pok茅mon
 builder.Services.AddScoped<IPokemonFavoriteRepository, PokemonFavoriteRepository>();
 
 #endregion
@@ -164,8 +185,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-// Middleware de autenticaci髇 y autorizaci髇
+// CORS siempre antes de Auth
+app.UseCors("AllowAngular");
+// Middleware de autenticaci贸n y autorizaci贸n
 app.UseAuthentication();
 app.UseAuthorization();
 
